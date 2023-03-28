@@ -71,22 +71,21 @@ resource "google_compute_address" "public" {
   name = "kubernetes-lab-public-address"
 }
 
-# Kubernetes control plane nodes
-
-resource "google_compute_instance" "kubernetes_controller_0" {
-  name           = "kubernetes-controller-0"
+resource "google_compute_instance" "kubernetes_controller" {
+  count          = 3
+  name           = "kubernetes-controller-${count.index}"
   machine_type   = "e2-small"
   can_ip_forward = true
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+      image = "ubuntu-os-cloud/	ubuntu-2204-lts"
       size  = "200"
       type  = "pd-standard"
     }
   }
   network_interface {
     subnetwork = google_compute_subnetwork.kubernetes.id
-    network_ip = "10.240.0.10"
+    network_ip = "10.240.0.1${count.index}"
     access_config {}
   }
   service_account {
@@ -99,86 +98,27 @@ resource "google_compute_instance" "kubernetes_controller_0" {
       "monitoring"
     ]
   }
-  tags = ["kubernetes", "controller"]
+  tags = ["kubernetes-lab", "kubernetes", "controller"]
 }
 
-resource "google_compute_instance" "kubernetes_controller_1" {
-  name           = "kubernetes-controller-1"
-  machine_type   = "e2-small"
-  can_ip_forward = true
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
-      size  = "200"
-      type  = "pd-standard"
-    }
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.kubernetes.id
-    network_ip = "10.240.0.11"
-    access_config {}
-  }
-  service_account {
-    scopes = [
-      "compute-rw",
-      "storage-ro",
-      "service-management",
-      "service-control",
-      "logging-write",
-      "monitoring"
-    ]
-  }
-  tags = ["kubernetes", "controller"]
-}
-
-resource "google_compute_instance" "kubernetes_controller_2" {
-  name           = "kubernetes-controller-2"
-  machine_type   = "e2-small"
-  can_ip_forward = true
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
-      size  = "200"
-      type  = "pd-standard"
-    }
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.kubernetes.id
-    network_ip = "10.240.0.12"
-    access_config {}
-  }
-  service_account {
-    scopes = [
-      "compute-rw",
-      "storage-ro",
-      "service-management",
-      "service-control",
-      "logging-write",
-      "monitoring"
-    ]
-  }
-  tags = ["kubernetes", "controller"]
-}
-
-# Kubernetes worker nodes
-
-resource "google_compute_instance" "kubernetes_worker_0" {
-  name           = "kubernetes-worker-0"
+resource "google_compute_instance" "kubernetes_worker" {
+  count          = 3
+  name           = "kubernetes-worker-${count.index}"
   machine_type   = "e2-small"
   can_ip_forward = true
   metadata = {
-    "pod-cidr" = "10.200.0.0/24"
+    "pod-cidr" = "10.200.${count.index}.0/24"
   }
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
+      image = "ubuntu-os-cloud/ubuntu-2204-lts "
       size  = "200"
       type  = "pd-standard"
     }
   }
   network_interface {
     subnetwork = google_compute_subnetwork.kubernetes.id
-    network_ip = "10.240.0.20"
+    network_ip = "10.240.0.2${count.index}"
     access_config {}
   }
   service_account {
@@ -191,69 +131,5 @@ resource "google_compute_instance" "kubernetes_worker_0" {
       "monitoring"
     ]
   }
-  tags = ["kubernetes", "worker"]
-}
-
-resource "google_compute_instance" "kubernetes_worker_1" {
-  name         = "kubernetes-worker-1"
-  machine_type = "e2-small"
-  metadata = {
-    "pod-cidr" = "10.200.1.0/24"
-  }
-  can_ip_forward = true
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
-      size  = "200"
-      type  = "pd-standard"
-    }
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.kubernetes.id
-    network_ip = "10.240.0.21"
-    access_config {}
-  }
-  service_account {
-    scopes = [
-      "compute-rw",
-      "storage-ro",
-      "service-management",
-      "service-control",
-      "logging-write",
-      "monitoring"
-    ]
-  }
-  tags = ["kubernetes", "worker"]
-}
-
-resource "google_compute_instance" "kubernetes_worker_2" {
-  name           = "kubernetes-worker-2"
-  machine_type   = "e2-small"
-  can_ip_forward = true
-  metadata = {
-    "pod-cidr" = "10.200.2.0/24"
-  }
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2004-lts"
-      size  = "200"
-      type  = "pd-standard"
-    }
-  }
-  network_interface {
-    subnetwork = google_compute_subnetwork.kubernetes.id
-    network_ip = "10.240.0.22"
-    access_config {}
-  }
-  service_account {
-    scopes = [
-      "compute-rw",
-      "storage-ro",
-      "service-management",
-      "service-control",
-      "logging-write",
-      "monitoring"
-    ]
-  }
-  tags = ["kubernetes", "worker"]
+  tags = ["kubernetes-lab", "kubernetes", "worker"]
 }
