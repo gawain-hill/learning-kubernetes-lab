@@ -8,9 +8,7 @@ terraform {
 }
 
 provider "google" {
-  #credentials = file("learning-kubernetes-381920-5202214c73e5.json")
-
-  project = "learning-kubernetes-381920"
+  project = "<project is>"
   region  = "europe-west2"
   zone    = "europe-west2-a"
 }
