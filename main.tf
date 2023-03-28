@@ -1,4 +1,5 @@
 terraform {
+  required_version = "1.4.2"
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -69,24 +70,35 @@ resource "google_compute_address" "public" {
   name = "kubernetes-lab-public-address"
 }
 
+resource "google_service_account" "kubernetes_node" {
+  account_id   = "kubernetes-node"
+  display_name = "Kubernetes Node"
+}
+
 resource "google_compute_instance" "kubernetes_controller" {
-  count          = 3
-  name           = "kubernetes-controller-${count.index}"
-  machine_type   = "e2-small"
-  can_ip_forward = true
+  count        = 3
+  name         = "kubernetes-controller-${count.index}"
+  machine_type = "e2-small"
+  metadata = {
+    block-project-ssh-keys = true
+  }
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/	ubuntu-2204-lts"
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
       size  = "200"
       type  = "pd-standard"
     }
   }
+  shielded_instance_config {
+    enable_integrity_monitoring = true
+    enable_vtpm                 = true
+  }
   network_interface {
     subnetwork = google_compute_subnetwork.kubernetes.id
     network_ip = "10.240.0.1${count.index}"
-    access_config {}
   }
   service_account {
+    email = google_service_account.kubernetes_node.email
     scopes = [
       "compute-rw",
       "storage-ro",
@@ -100,26 +112,30 @@ resource "google_compute_instance" "kubernetes_controller" {
 }
 
 resource "google_compute_instance" "kubernetes_worker" {
-  count          = 3
-  name           = "kubernetes-worker-${count.index}"
-  machine_type   = "e2-small"
-  can_ip_forward = true
+  count        = 3
+  name         = "kubernetes-worker-${count.index}"
+  machine_type = "e2-small"
   metadata = {
-    "pod-cidr" = "10.200.${count.index}.0/24"
+    block-project-ssh-keys = true
+    pod-cidr               = "10.200.${count.index}.0/24"
   }
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2204-lts "
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
       size  = "200"
       type  = "pd-standard"
     }
   }
+  shielded_instance_config {
+    enable_integrity_monitoring = true
+    enable_vtpm                 = true
+  }
   network_interface {
     subnetwork = google_compute_subnetwork.kubernetes.id
     network_ip = "10.240.0.2${count.index}"
-    access_config {}
   }
   service_account {
+    email = google_service_account.kubernetes_node.email
     scopes = [
       "compute-rw",
       "storage-ro",
