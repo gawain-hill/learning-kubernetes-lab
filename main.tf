@@ -75,6 +75,19 @@ resource "google_service_account" "kubernetes_node" {
   display_name = "Kubernetes Node"
 }
 
+resource "google_storage_bucket" "kubernetes_cloud_init" {
+  name                     = "kubernetes-cloud-init"
+  location                 = "EUROPE-WEST2"
+  force_destroy            = true
+  public_access_prevention = "enforced"
+}
+
+resource "google_storage_bucket_object" "cloud_init_config" {
+  name   = "cloud-init-config"
+  source = "./cloud-init.yaml"
+  bucket = google_storage_bucket.kubernetes_cloud_init.name
+}
+
 resource "google_compute_instance" "kubernetes_controller" {
   count        = 3
   name         = "kubernetes-controller-${count.index}"
